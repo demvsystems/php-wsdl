@@ -4,6 +4,7 @@ namespace Dgame\Wsdl\Http;
 
 use DOMDocument;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use Psr\Http\Message\ResponseInterface;
 
@@ -16,11 +17,12 @@ final class HttpClient
     /**
      * @var self
      */
-    private static $instance;
+    private static HttpClient $instance;
+
     /**
      * @var Client
      */
-    private $client;
+    private Client $client;
 
     /**
      * HttpClient constructor.
@@ -48,6 +50,7 @@ final class HttpClient
      * @param string $uri
      *
      * @return ResponseInterface
+     * @throws GuzzleException
      */
     public function get(string $uri): ResponseInterface
     {
@@ -66,6 +69,7 @@ final class HttpClient
      * @param string $uri
      *
      * @return DOMDocument|null
+     * @throws GuzzleException
      */
     public function loadDocument(string $uri): ?DOMDocument
     {

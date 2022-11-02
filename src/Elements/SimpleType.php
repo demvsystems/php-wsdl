@@ -15,7 +15,7 @@ class SimpleType extends Element
     /**
      * @var string
      */
-    private $name;
+    private string $name;
 
     /**
      * SimpleType constructor.

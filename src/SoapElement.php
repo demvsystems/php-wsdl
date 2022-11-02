@@ -13,23 +13,27 @@ class SoapElement
     /**
      * @var string
      */
-    private $name;
+    private string $name;
+
     /**
      * @var string
      */
-    private $uri;
+    private string $uri;
+
     /**
      * @var int
      */
-    private $min;
+    private int $min;
+
     /**
      * @var int
      */
-    private $max;
+    private int $max;
+
     /**
      * @var RestrictionInterface[]
      */
-    private $restrictions = [];
+    private array $restrictions;
 
     /**
      * Input constructor.

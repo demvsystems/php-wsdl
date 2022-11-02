@@ -11,7 +11,7 @@ final class EnumRestriction implements RestrictionInterface
     /**
      * @var array
      */
-    private $values = [];
+    private array $values ;
 
     /**
      * EnumRestriction constructor.
@@ -38,7 +38,7 @@ final class EnumRestriction implements RestrictionInterface
      */
     public function isValid($value): bool
     {
-        return in_array($value, $this->values);
+        return in_array($value, $this->values, false);
     }
 
     /**

@@ -11,7 +11,7 @@ final class PatternRestriction implements RestrictionInterface
     /**
      * @var string
      */
-    private $pattern;
+    private string $pattern;
 
     /**
      * PatternRestriction constructor.

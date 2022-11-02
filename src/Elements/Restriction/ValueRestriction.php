@@ -11,11 +11,12 @@ final class ValueRestriction implements RestrictionInterface
     /**
      * @var int
      */
-    private $min;
+    private int $min;
+
     /**
      * @var int
      */
-    private $max;
+    private int $max;
 
     /**
      * ValueRestriction constructor.

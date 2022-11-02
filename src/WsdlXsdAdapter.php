@@ -13,7 +13,7 @@ final class WsdlXsdAdapter implements XsdAdapterInterface
     /**
      * @var Wsdl
      */
-    private $wsdl;
+    private Wsdl $wsdl;
 
     /**
      * WsdlXsdAdapter constructor.

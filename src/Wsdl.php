@@ -21,27 +21,27 @@ final class Wsdl
     /**
      * @var string
      */
-    private $location;
+    private string $location;
     /**
-     * @var DOMDocument
+     * @var DOMDocument | null
      */
-    private $document;
+    private ?DOMDocument $document;
     /**
-     * @var DOMElement
+     * @var DOMElement | null
      */
-    private $binding;
-    /**
-     * @var array
-     */
-    private $operations = [];
+    private ?DOMElement $binding;
     /**
      * @var array
      */
-    private $actions = [];
+    private array $operations = [];
+    /**
+     * @var array
+     */
+    private array $actions = [];
     /**
      * @var Xsd[]
      */
-    private $schemas = [];
+    private array $schemas = [];
 
     /**
      * Wsdl constructor.
@@ -99,6 +99,7 @@ final class Wsdl
      * @param string $operation
      *
      * @return string
+     * @throws \Throwable
      */
     public function getSoapActionOfOperation(string $operation): string
     {
@@ -114,6 +115,7 @@ final class Wsdl
      * @param string $pattern
      *
      * @return string
+     * @throws \Throwable
      */
     public function getOperationByPattern(string $pattern): string
     {
@@ -138,6 +140,7 @@ final class Wsdl
 
     /**
      * @return DOMElement
+     * @throws \Throwable
      */
     private function getBinding(): DOMElement
     {
@@ -154,6 +157,7 @@ final class Wsdl
 
     /**
      * @return array
+     * @throws \Throwable
      */
     public function getOperations(): array
     {
@@ -174,6 +178,7 @@ final class Wsdl
 
     /**
      * @return array
+     * @throws \Throwable
      */
     public function getSoapActions(): array
     {
@@ -208,6 +213,7 @@ final class Wsdl
 
     /**
      * @return Xsd
+     * @throws \Throwable
      */
     public function getFirstSchema(): Xsd
     {
@@ -251,7 +257,6 @@ final class Wsdl
             return $schemas[$uri];
         }
 
-        /** @var Xsd $schema */
         foreach ($schemas as $schema) {
             if ($schema->hasImportLocation($uri)) {
                 return $schema->loadXsdByUri($uri);
