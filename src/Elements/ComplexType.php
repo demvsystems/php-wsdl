@@ -15,17 +15,7 @@ final class ComplexType extends SimpleType
     /**
      * @var Extension[]
      */
-    private $extensions = [];
-
-    /**
-     * ComplexType constructor.
-     *
-     * @param DOMElement $element
-     */
-    public function __construct(DOMElement $element)
-    {
-        parent::__construct($element);
-    }
+    private array $extensions = [];
 
     /**
      * @param ComplexType|null $complex
@@ -60,6 +50,7 @@ final class ComplexType extends SimpleType
 
     /**
      * @return Extension
+     * @throws \Throwable
      */
     public function getFirstExtension(): Extension
     {
@@ -114,6 +105,7 @@ final class ComplexType extends SimpleType
      * @param string $name
      *
      * @return Element
+     * @throws \Throwable
      */
     public function getElementByName(string $name): Element
     {

@@ -26,7 +26,7 @@ final class Xsd implements XsdAdapterInterface
     /**
      * @var DOMElement
      */
-    private $element;
+    private DOMElement $element;
     /**
      * @var DOMXPath
      */
@@ -328,8 +328,7 @@ final class Xsd implements XsdAdapterInterface
      */
     private function getPossibleLocations(string $location): array
     {
-        $uri = new Uri($location);
-        if ($uri->isAbsolute()) {
+        if (str_starts_with($location, '//')) {
             return [$location];
         }
 
@@ -355,6 +354,7 @@ final class Xsd implements XsdAdapterInterface
      * @param string $prefix
      *
      * @return Xsd
+     * @throws \Throwable
      */
     public function loadXsdByPrefix(string $prefix): self
     {

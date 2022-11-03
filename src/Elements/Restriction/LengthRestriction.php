@@ -11,15 +11,17 @@ final class LengthRestriction implements RestrictionInterface
     /**
      * @var int|null
      */
-    private $min;
+    private ?int $min;
+
     /**
      * @var int|null
      */
-    private $max;
+    private ?int $max;
+
     /**
      * @var int|null
      */
-    private $length;
+    private ?int $length;
 
     /**
      * @param int $length

@@ -13,15 +13,15 @@ final class Extension
     /**
      * @var string
      */
-    private $base;
+    private string $base;
     /**
      * @var string
      */
-    private $prefix;
+    private string $prefix;
     /**
      * @var DOMElement
      */
-    private $element;
+    private DOMElement $element;
 
     /**
      * Extension constructor.
@@ -33,7 +33,7 @@ final class Extension
     {
         $this->element = $element;
 
-        if (strpos($extension, ':') !== false) {
+        if (str_contains($extension, ':')) {
             [$this->prefix, $this->base] = explode(':', $extension);
         } else {
             $this->base = $extension;

@@ -18,15 +18,15 @@ final class SoapOperation
     /**
      * @var XsdAdapterInterface
      */
-    private $xsd;
+    private XsdAdapterInterface $xsd;
     /**
-     * @var Element
+     * @var Element|null
      */
-    private $element;
+    private ?Element $element;
     /**
      * @var SoapElement[]
      */
-    private $elements = [];
+    private array $elements = [];
 
     /**
      * SoapOperation constructor.
@@ -58,6 +58,7 @@ final class SoapOperation
 
     /**
      * @return SoapElement[]
+     * @throws \Throwable
      */
     public function getSoapElements(): array
     {
@@ -84,6 +85,7 @@ final class SoapOperation
      * @param Extension $extension
      *
      * @return SoapElement[]
+     * @throws \Throwable
      */
     private function loadParentElements(Extension $extension): array
     {
@@ -125,6 +127,7 @@ final class SoapOperation
      * @param ComplexType $complex
      *
      * @return SoapElement[]
+     * @throws \Throwable
      */
     private function collectElementsFrom(ComplexType $complex): array
     {
@@ -134,20 +137,20 @@ final class SoapOperation
             $elements  = array_merge($elements, $this->loadParentElements($extension));
         }
 
-        $childs = $complex->getElements();
+        $childElements = $complex->getElements();
 
-        return array_merge($this->collectElements($childs), $elements);
+        return array_merge($this->collectElements($childElements), $elements);
     }
 
     /**
-     * @param Element[] $childs
+     * @param Element[] $childElements
      *
      * @return SoapElement[]
      */
-    private function collectElements(array $childs): array
+    private function collectElements(array $childElements): array
     {
         $elements = [];
-        foreach ($childs as $child) {
+        foreach ($childElements as $child) {
             $name = $child->getAttribute('name');
 
             $elements[$name] = $this->createChildElement($child);
@@ -160,6 +163,7 @@ final class SoapOperation
      * @param Element $child
      *
      * @return SoapElement
+     * @throws \Throwable
      */
     private function createChildElement(Element $child): SoapElement
     {
@@ -187,11 +191,12 @@ final class SoapOperation
      */
     private function loadRestrictions(string $type): array
     {
-        if (strpos($type, ':') === false) {
+        if (!str_contains($type, ':')) {
             return [];
         }
 
         $element = $this->getXsd()->findElementByNameInDeep($type);
+
         /** @var SimpleType $simple */
         if ($element !== null && $element->isSimpleType($simple)) {
             return $simple->getRestrictions();

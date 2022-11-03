@@ -11,7 +11,7 @@ final class SoapNode extends SoapElement
     /**
      * @var SoapElement[]
      */
-    private $elements = [];
+    private array $elements = [];
 
     /**
      * @param SoapNode|null $node

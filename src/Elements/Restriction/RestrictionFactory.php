@@ -15,6 +15,7 @@ final class RestrictionFactory
      * @param DOMElement $element
      *
      * @return RestrictionInterface
+     * @throws \Throwable
      */
     public static function createFrom(DOMElement $element): RestrictionInterface
     {

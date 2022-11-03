@@ -1,10 +1,14 @@
 {
-    "name": "dgame/php-wsdl",
+    "name": "demvsystems/php-wsdl",
     "description": "php wsdl",
     "license": "MIT",
     "type": "library",
-    "homepage": "https://github.com/php-wsdl",
-    "keywords": ["WSDL", "Wsdl", "Xsd"],
+    "homepage": "https://github.com/demvsystems/php-wsdl",
+    "keywords": [
+        "WSDL",
+        "Wsdl",
+        "Xsd"
+    ],
     "authors": [
         {
             "name": "Randy Schütt",
@@ -12,15 +16,21 @@
         }
     ],
     "require": {
-        "php": "^7.1",
-        "dgame/php-ensurance": "^1.0 || ^2.0",
-        "dgame/php-soap": "dev-1.0-alpha",
-        "enrise/urihelper": "^1.0",
-        "guzzlehttp/guzzle": "^6.3"
+        "ext-dom": "*",
+        "php": "^8.1",
+        "dgame/php-ensurance": "^2.3",
+        "demvsystems/php-soap": "^2.0",
+        "guzzlehttp/guzzle": "^7"
     },
     "require-dev": {
-        "phpunit/phpunit": "^6.4"
+        "phpunit/phpunit": "^9"
     },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "git@github.com:demvsystems/php-soap.git"
+        }
+    ],
     "autoload": {
         "classmap": [
             "src/"

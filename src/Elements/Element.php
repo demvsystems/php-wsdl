@@ -14,7 +14,7 @@ class Element
     /**
      * @var DOMElement
      */
-    private $element;
+    private DOMElement $element;
 
     /**
      * Element constructor.
@@ -80,6 +80,7 @@ class Element
 
     /**
      * @return SimpleType
+     * @throws \Throwable
      */
     final public function getSimpleType(): SimpleType
     {
@@ -96,6 +97,7 @@ class Element
 
     /**
      * @return ComplexType
+     * @throws \Throwable
      */
     final public function getComplexType(): ComplexType
     {

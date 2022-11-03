@@ -15,25 +15,27 @@ class SoapRequest
     /**
      * @var string
      */
-    private $operation;
+    private string $operation;
     /**
      * @var string
      */
-    private $action;
+    private string $action;
     /**
-     * @var Body
+     * @var Body|null
      */
-    private $body;
+    private ?Body $body;
     /**
-     * @var Header
+     * @var Header|null
      */
-    private $header;
+    private ?Header $header;
 
     /**
      * SoapRequest constructor.
      *
      * @param Wsdl   $wsdl
      * @param string $operation
+     *
+     * @throws \Throwable
      */
     public function __construct(Wsdl $wsdl, string $operation)
     {
