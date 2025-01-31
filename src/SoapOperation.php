@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Dgame\Wsdl;
 
 use Dgame\Wsdl\Elements\ComplexType;
@@ -15,14 +17,8 @@ use function Dgame\Ensurance\enforce;
  */
 final class SoapOperation
 {
-    /**
-     * @var XsdAdapterInterface
-     */
-    private XsdAdapterInterface $xsd;
-    /**
-     * @var Element|null
-     */
-    private ?Element $element;
+    private readonly ?Element $element;
+
     /**
      * @var SoapElement[]
      */
@@ -30,27 +26,17 @@ final class SoapOperation
 
     /**
      * SoapOperation constructor.
-     *
-     * @param XsdAdapterInterface $xsd
-     * @param string              $operation
      */
-    public function __construct(XsdAdapterInterface $xsd, string $operation)
+    public function __construct(private readonly XsdAdapterInterface $xsdAdapter, string $operation)
     {
-        $this->xsd     = $xsd;
-        $this->element = $xsd->findElementByNameInDeep($operation);
+        $this->element = $this->xsdAdapter->findElementByNameInDeep($operation);
     }
 
-    /**
-     * @return XsdAdapterInterface
-     */
     public function getXsd(): XsdAdapterInterface
     {
-        return $this->xsd;
+        return $this->xsdAdapter;
     }
 
-    /**
-     * @return Element
-     */
     public function getElement(): Element
     {
         return $this->element;
@@ -62,27 +48,26 @@ final class SoapOperation
      */
     public function getSoapElements(): array
     {
-        if (!empty($this->elements)) {
+        if ($this->elements !== []) {
             return $this->elements;
         }
 
         $this->elements = [];
 
-        $complex = $this->getElement()->getComplexType();
-        enforce($complex !== null)->orThrow('Can only collect elements from a ComplexType');
+        $complexType = $this->element->getComplexType();
+        enforce($complexType instanceof \Dgame\Wsdl\Elements\ComplexType)->orThrow('Can only collect elements from a ComplexType');
 
-        if ($complex->hasExtensions()) {
-            $extension      = $complex->getFirstExtension();
+        if ($complexType->hasExtensions()) {
+            $extension      = $complexType->getFirstExtension();
             $this->elements = $this->loadParentElements($extension);
         }
 
-        $this->elements = array_merge($this->collectElementsFrom($complex), $this->elements);
+        $this->elements = array_merge($this->collectElementsFrom($complexType), $this->elements);
 
         return $this->elements;
     }
 
     /**
-     * @param Extension $extension
      *
      * @return SoapElement[]
      * @throws \Throwable
@@ -90,7 +75,7 @@ final class SoapOperation
     private function loadParentElements(Extension $extension): array
     {
         $name    = $extension->getPrefixedName();
-        $parent  = $this->getXsd()->findElementByNameInDeep($name);
+        $parent  = $this->xsdAdapter->findElementByNameInDeep($name);
         if ($parent === null) {
             return [];
         }
@@ -104,18 +89,16 @@ final class SoapOperation
         );
 
         $prefix = $extension->getPrefix();
-        $uri    = $this->getXsd()->getUriByPrefix($prefix);
+        $uri    = $this->xsdAdapter->getUriByPrefix($prefix);
 
-        array_walk($elements, function (SoapElement $element) use ($uri): void {
-            $element->setUri($uri);
+        array_walk($elements, function (SoapElement $soapElement) use ($uri): void {
+            $soapElement->setUri($uri);
         });
 
         return $elements;
     }
 
     /**
-     * @param Extension $extension
-     *
      * @return SoapElement[]
      */
     private function collectExtensionElements(Extension $extension): array
@@ -124,20 +107,19 @@ final class SoapOperation
     }
 
     /**
-     * @param ComplexType $complex
      *
      * @return SoapElement[]
      * @throws \Throwable
      */
-    private function collectElementsFrom(ComplexType $complex): array
+    private function collectElementsFrom(ComplexType $complexType): array
     {
         $elements = [];
-        if ($complex->hasExtensions()) {
-            $extension = $complex->getFirstExtension();
+        if ($complexType->hasExtensions()) {
+            $extension = $complexType->getFirstExtension();
             $elements  = array_merge($elements, $this->loadParentElements($extension));
         }
 
-        $childElements = $complex->getElements();
+        $childElements = $complexType->getElements();
 
         return array_merge($this->collectElements($childElements), $elements);
     }
@@ -150,19 +132,16 @@ final class SoapOperation
     private function collectElements(array $childElements): array
     {
         $elements = [];
-        foreach ($childElements as $child) {
-            $name = $child->getAttribute('name');
+        foreach ($childElements as $childElement) {
+            $name = $childElement->getAttribute('name');
 
-            $elements[$name] = $this->createChildElement($child);
+            $elements[$name] = $this->createChildElement($childElement);
         }
 
         return $elements;
     }
 
     /**
-     * @param Element $child
-     *
-     * @return SoapElement
      * @throws \Throwable
      */
     private function createChildElement(Element $child): SoapElement
@@ -173,20 +152,18 @@ final class SoapOperation
         $type = $child->getAttribute('type');
 
         $restrictions = $this->loadRestrictions($type);
-        $element      = $this->getXsd()->findElementByNameInDeep($type);
+        $element      = $this->xsdAdapter->findElementByNameInDeep($type);
         if ($element !== null && $element->isComplexType($complex)) {
-            $node = new SoapNode($name, (int) $min, (int) $max, $restrictions);
-            $node->setChildElements($this->collectElementsFrom($complex));
+            $soapNode = new SoapNode($name, (int) $min, (int) $max, $restrictions);
+            $soapNode->setChildElements($this->collectElementsFrom($complex));
 
-            return $node;
+            return $soapNode;
         }
 
         return new SoapElement($name, (int) $min, (int) $max, $restrictions);
     }
 
     /**
-     * @param string $type
-     *
      * @return RestrictionInterface[]
      */
     private function loadRestrictions(string $type): array
@@ -195,7 +172,7 @@ final class SoapOperation
             return [];
         }
 
-        $element = $this->getXsd()->findElementByNameInDeep($type);
+        $element = $this->xsdAdapter->findElementByNameInDeep($type);
 
         /** @var SimpleType $simple */
         if ($element !== null && $element->isSimpleType($simple)) {

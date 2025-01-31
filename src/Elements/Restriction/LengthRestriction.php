@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Dgame\Wsdl\Elements\Restriction;
 
 /**
@@ -8,26 +10,12 @@ namespace Dgame\Wsdl\Elements\Restriction;
  */
 final class LengthRestriction implements RestrictionInterface
 {
-    /**
-     * @var int|null
-     */
-    private ?int $min;
+    private ?int $min = null;
 
-    /**
-     * @var int|null
-     */
-    private ?int $max;
+    private ?int $max = null;
 
-    /**
-     * @var int|null
-     */
-    private ?int $length;
+    private ?int $length = null;
 
-    /**
-     * @param int $length
-     *
-     * @return LengthRestriction
-     */
     public static function exact(int $length): self
     {
         $restriction         = new self();
@@ -36,12 +24,6 @@ final class LengthRestriction implements RestrictionInterface
         return $restriction;
     }
 
-    /**
-     * @param int $min
-     * @param int $max
-     *
-     * @return LengthRestriction
-     */
     public static function within(int $min, int $max): self
     {
         $restriction      = new self();
@@ -51,35 +33,21 @@ final class LengthRestriction implements RestrictionInterface
         return $restriction;
     }
 
-    /**
-     * @return int|null
-     */
     public function getMin(): ?int
     {
         return $this->min;
     }
 
-    /**
-     * @return int|null
-     */
     public function getMax(): ?int
     {
         return $this->max;
     }
 
-    /**
-     * @return int|null
-     */
     public function getLength(): ?int
     {
         return $this->length;
     }
 
-    /**
-     * @param $value
-     *
-     * @return bool
-     */
     public function isValid($value): bool
     {
         $value = (int) $value;

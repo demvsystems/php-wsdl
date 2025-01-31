@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Dgame\Wsdl\Elements\Restriction;
 
 use DOMElement;
@@ -12,39 +14,31 @@ use function Dgame\Ensurance\enforce;
 final class RestrictionFactory
 {
     /**
-     * @param DOMElement $element
-     *
-     * @return RestrictionInterface
      * @throws \Throwable
      */
-    public static function createFrom(DOMElement $element): RestrictionInterface
+    public static function createFrom(DOMElement $domElement): RestrictionInterface
     {
-        $restriction = self::createValueRestriction($element) ??
-                       self::createEnumRestriction($element) ??
-                       self::createLengthRestriction($element) ??
-                       self::createPatternRestriction($element);
+        $restriction = self::createValueRestriction($domElement) ??
+                       self::createEnumRestriction($domElement) ??
+                       self::createLengthRestriction($domElement) ??
+                       self::createPatternRestriction($domElement);
 
-        enforce($restriction !== null)->orThrow('Could not detect Restriction');
+        enforce($restriction instanceof \Dgame\Wsdl\Elements\Restriction\RestrictionInterface)->orThrow('Could not detect Restriction');
 
         return $restriction;
     }
 
-    /**
-     * @param DOMElement $element
-     *
-     * @return RestrictionInterface|null
-     */
-    public static function createLengthRestriction(DOMElement $element): ?RestrictionInterface
+    public static function createLengthRestriction(DOMElement $domElement): ?RestrictionInterface
     {
-        $length = $element->getElementsByTagName('length');
-        if ($length->length !== 0) {
-            $len = (int) $length->item(0)->getAttribute('value');
+        $domNodeList = $domElement->getElementsByTagName('length');
+        if ($domNodeList->length !== 0) {
+            $len = (int) $domNodeList->item(0)->getAttribute('value');
 
             return LengthRestriction::exact($len);
         }
 
-        $minLength = $element->getElementsByTagName('minLength');
-        $maxLength = $element->getElementsByTagName('maxLength');
+        $minLength = $domElement->getElementsByTagName('minLength');
+        $maxLength = $domElement->getElementsByTagName('maxLength');
         if ($minLength->length !== 0 || $maxLength->length !== 0) {
             $min = $minLength->length !== 0 ? (int) $minLength->item(0)->getAttribute('value') : 0;
             $max = $maxLength->length !== 0 ? (int) $maxLength->item(0)->getAttribute('value') : PHP_INT_MAX;
@@ -55,52 +49,37 @@ final class RestrictionFactory
         return null;
     }
 
-    /**
-     * @param DOMElement $element
-     *
-     * @return RestrictionInterface|null
-     */
-    public static function createPatternRestriction(DOMElement $element): ?RestrictionInterface
+    public static function createPatternRestriction(DOMElement $domElement): ?RestrictionInterface
     {
-        $pattern = $element->getElementsByTagName('pattern');
-        if ($pattern->length === 0) {
+        $domNodeList = $domElement->getElementsByTagName('pattern');
+        if ($domNodeList->length === 0) {
             return null;
         }
 
-        return new PatternRestriction($pattern->item(0)->getAttribute('value'));
+        return new PatternRestriction($domNodeList->item(0)->getAttribute('value'));
     }
 
-    /**
-     * @param DOMElement $element
-     *
-     * @return RestrictionInterface|null
-     */
-    public static function createEnumRestriction(DOMElement $element): ?RestrictionInterface
+    public static function createEnumRestriction(DOMElement $domElement): ?RestrictionInterface
     {
-        $enum = $element->getElementsByTagName('enumeration');
-        if ($enum->length === 0) {
+        $domNodeList = $domElement->getElementsByTagName('enumeration');
+        if ($domNodeList->length === 0) {
             return null;
         }
 
         $values = [];
-        for ($i = 0, $c = $enum->length; $i < $c; $i++) {
-            $values[] = $enum->item($i)->getAttribute('value');
+        for ($i = 0, $c = $domNodeList->length; $i < $c; ++$i) {
+            $values[] = $domNodeList->item($i)->getAttribute('value');
         }
 
         return new EnumRestriction($values);
     }
 
-    /**
-     * @param DOMElement $element
-     *
-     * @return RestrictionInterface|null
-     */
-    public static function createValueRestriction(DOMElement $element): ?RestrictionInterface
+    public static function createValueRestriction(DOMElement $domElement): ?RestrictionInterface
     {
-        $minValue = $element->getElementsByTagName('minInclusive');
-        $maxValue = $element->getElementsByTagName('maxInclusive');
-        if ($minValue->length !== 0 || $maxValue->length !== 0) {
-            $min = $minValue->length !== 0 ? (int) $minValue->item(0)->getAttribute('value') : 0;
+        $domNodeList = $domElement->getElementsByTagName('minInclusive');
+        $maxValue = $domElement->getElementsByTagName('maxInclusive');
+        if ($domNodeList->length !== 0 || $maxValue->length !== 0) {
+            $min = $domNodeList->length !== 0 ? (int) $domNodeList->item(0)->getAttribute('value') : 0;
             $max = $maxValue->length !== 0 ? (int) $maxValue->item(0)->getAttribute('value') : PHP_INT_MAX;
 
             return new ValueRestriction($min, $max);

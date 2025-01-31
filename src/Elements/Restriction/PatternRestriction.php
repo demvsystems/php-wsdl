@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Dgame\Wsdl\Elements\Restriction;
 
 /**
@@ -9,23 +11,12 @@ namespace Dgame\Wsdl\Elements\Restriction;
 final class PatternRestriction implements RestrictionInterface
 {
     /**
-     * @var string
-     */
-    private string $pattern;
-
-    /**
      * PatternRestriction constructor.
-     *
-     * @param string $pattern
      */
-    public function __construct(string $pattern)
+    public function __construct(private readonly string $pattern)
     {
-        $this->pattern = $pattern;
     }
 
-    /**
-     * @return string
-     */
     public function getPattern(): string
     {
         return $this->pattern;
@@ -33,17 +24,12 @@ final class PatternRestriction implements RestrictionInterface
 
     /**
      * @param $value
-     *
-     * @return bool
      */
     public function isValid($value): bool
     {
-        return preg_match(sprintf('/%s/', $this->pattern), $value) === 1;
+        return preg_match(sprintf('/%s/', $this->pattern), (string) $value) === 1;
     }
 
-    /**
-     * @return string
-     */
     public function getRejectionFormat(): string
     {
         return '"%s" does not match ' . $this->pattern;

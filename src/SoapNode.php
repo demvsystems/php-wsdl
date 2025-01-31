@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Dgame\Wsdl;
 
 /**
@@ -15,8 +17,6 @@ final class SoapNode extends SoapElement
 
     /**
      * @param SoapNode|null $node
-     *
-     * @return bool
      */
     public function isSoapNode(self &$node = null): bool
     {
@@ -30,17 +30,14 @@ final class SoapNode extends SoapElement
      */
     public function setChildElements(array $elements): void
     {
-        foreach ($elements as $child) {
-            $this->appendChildElement($child);
+        foreach ($elements as $element) {
+            $this->appendChildElement($element);
         }
     }
 
-    /**
-     * @param SoapElement $element
-     */
-    public function appendChildElement(SoapElement $element): void
+    public function appendChildElement(SoapElement $soapElement): void
     {
-        $this->elements[$element->getName()] = $element;
+        $this->elements[$soapElement->getName()] = $soapElement;
     }
 
     /**
@@ -51,21 +48,11 @@ final class SoapNode extends SoapElement
         return $this->elements;
     }
 
-    /**
-     * @param string $name
-     *
-     * @return bool
-     */
     public function hasChildElementWithName(string $name): bool
     {
         return array_key_exists($name, $this->elements);
     }
 
-    /**
-     * @param string $name
-     *
-     * @return SoapElement
-     */
     public function getChildElementByName(string $name): SoapElement
     {
         return $this->elements[$name];

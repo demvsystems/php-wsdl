@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Dgame\Wsdl\Http;
 
 use DOMDocument;
@@ -14,19 +16,10 @@ use Psr\Http\Message\ResponseInterface;
  */
 final class HttpClient
 {
-    /**
-     * @var self
-     */
-    private static HttpClient $instance;
+    private static ?HttpClient $httpClient = null;
 
-    /**
-     * @var Client
-     */
-    private Client $client;
+    private readonly Client $client;
 
-    /**
-     * HttpClient constructor.
-     */
     private function __construct()
     {
         $this->client = new Client(['defaults' => [
@@ -34,41 +27,32 @@ final class HttpClient
         ]]);
     }
 
-    /**
-     * @return HttpClient
-     */
     public static function instance(): self
     {
-        if (self::$instance === null) {
-            self::$instance = new self();
+        if (self::$httpClient === null) {
+            self::$httpClient = new self();
         }
 
-        return self::$instance;
+        return self::$httpClient;
     }
 
     /**
-     * @param string $uri
-     *
-     * @return ResponseInterface
      * @throws GuzzleException
      */
     public function get(string $uri): ResponseInterface
     {
         try {
             return $this->client->get($uri);
-        } catch (RequestException $e) {
-            if ($e->hasResponse()) {
-                return $e->getResponse();
+        } catch (RequestException $requestException) {
+            if ($requestException->hasResponse()) {
+                return $requestException->getResponse();
             }
 
-            throw $e;
+            throw $requestException;
         }
     }
 
     /**
-     * @param string $uri
-     *
-     * @return DOMDocument|null
      * @throws GuzzleException
      */
     public function loadDocument(string $uri): ?DOMDocument
@@ -81,13 +65,13 @@ final class HttpClient
 
         $content = $response->getBody()->getContents();
         $content = trim($content);
-        if (empty($content)) {
+        if ($content === '' || $content === '0') {
             return null;
         }
 
-        $document = new DOMDocument('1.0', 'utf-8');
-        if ($document->loadXML($content)) {
-            return $document;
+        $domDocument = new DOMDocument('1.0', 'utf-8');
+        if ($domDocument->loadXML($content)) {
+            return $domDocument;
         }
 
         return null;
