@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Dgame\Wsdl\Elements;
 
 use DOMElement;
@@ -19,8 +21,6 @@ final class ComplexType extends SimpleType
 
     /**
      * @param ComplexType|null $complex
-     *
-     * @return bool
      */
     public function isComplexType(self &$complex = null): bool
     {
@@ -29,27 +29,20 @@ final class ComplexType extends SimpleType
         return true;
     }
 
-    /**
-     * @return bool
-     */
     public function isAbstract(): bool
     {
         return $this->hasAttribute('abstract')
                && filter_var($this->getAttribute('abstract'), FILTER_VALIDATE_BOOLEAN);
     }
 
-    /**
-     * @return bool
-     */
     public function hasExtensions(): bool
     {
         $extensions = $this->getExtensions();
 
-        return !empty($extensions);
+        return $extensions !== [];
     }
 
     /**
-     * @return Extension
      * @throws \Throwable
      */
     public function getFirstExtension(): Extension
@@ -61,21 +54,11 @@ final class ComplexType extends SimpleType
         return reset($extensions);
     }
 
-    /**
-     * @param string $name
-     *
-     * @return bool
-     */
     public function hasExtensionWithName(string $name): bool
     {
         return array_key_exists($name, $this->extensions);
     }
 
-    /**
-     * @param string $name
-     *
-     * @return Extension
-     */
     public function getExtensionByName(string $name): Extension
     {
         return $this->extensions[$name];
@@ -86,13 +69,13 @@ final class ComplexType extends SimpleType
      */
     public function getExtensions(): array
     {
-        if (!empty($this->extensions)) {
+        if ($this->extensions !== []) {
             return $this->extensions;
         }
 
-        $nodes = $this->getDomElement()->getElementsByTagName('extension');
-        for ($i = 0, $c = $nodes->length; $i < $c; $i++) {
-            $node      = $nodes->item($i);
+        $domNodeList = $this->getDomElement()->getElementsByTagName('extension');
+        for ($i = 0, $c = $domNodeList->length; $i < $c; ++$i) {
+            $node      = $domNodeList->item($i);
             $extension = new Extension($node, $node->getAttribute('base'));
 
             $this->extensions[$extension->getBase()] = $extension;
@@ -102,33 +85,28 @@ final class ComplexType extends SimpleType
     }
 
     /**
-     * @param string $name
-     *
-     * @return Element
      * @throws \Throwable
      */
     public function getElementByName(string $name): Element
     {
         $elements = $this->getElementsByName($name);
 
-        enforce(count($elements) !== 0)->orThrow('There are no nodes with name %s', $name);
+        enforce($elements !== [])->orThrow('There are no nodes with name %s', $name);
         enforce(count($elements) === 1)->orThrow('There are multiple nodes with name %s', $name);
 
         return array_pop($elements);
     }
 
     /**
-     * @param string $name
-     *
      * @return Element[]
      */
     public function getElementsByName(string $name): array
     {
         $elements = [];
 
-        $nodes = $this->getDomElement()->getElementsByTagName($name);
-        for ($i = 0, $c = $nodes->length; $i < $c; $i++) {
-            $node = $nodes->item($i);
+        $domNodeList = $this->getDomElement()->getElementsByTagName($name);
+        for ($i = 0, $c = $domNodeList->length; $i < $c; ++$i) {
+            $node = $domNodeList->item($i);
 
             $elements[$node->getAttribute('name')] = new self($node);
         }
@@ -141,11 +119,11 @@ final class ComplexType extends SimpleType
      */
     public function getElements(): array
     {
-        $nodes = $this->getDomElement()->getElementsByTagName('element');
+        $domNodeList = $this->getDomElement()->getElementsByTagName('element');
 
         $elements = [];
-        for ($i = 0, $c = $nodes->length; $i < $c; $i++) {
-            $node = $nodes->item($i);
+        for ($i = 0, $c = $domNodeList->length; $i < $c; ++$i) {
+            $node = $domNodeList->item($i);
 
             $elements[] = new Element($node);
         }

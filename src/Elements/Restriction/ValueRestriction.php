@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Dgame\Wsdl\Elements\Restriction;
 
 /**
@@ -8,39 +10,21 @@ namespace Dgame\Wsdl\Elements\Restriction;
  */
 final class ValueRestriction implements RestrictionInterface
 {
-    /**
-     * @var int
-     */
-    private int $min;
-
-    /**
-     * @var int
-     */
-    private int $max;
+    private readonly int $max;
 
     /**
      * ValueRestriction constructor.
-     *
-     * @param int $min
-     * @param int $max
      */
-    public function __construct(int $min, int $max)
+    public function __construct(private readonly int $min, int $max)
     {
-        $this->min = $min;
-        $this->max = $min;
+        $this->max = $this->min;
     }
 
-    /**
-     * @return int
-     */
     public function getMin(): int
     {
         return $this->min;
     }
 
-    /**
-     * @return int
-     */
     public function getMax(): int
     {
         return $this->max;
@@ -48,19 +32,14 @@ final class ValueRestriction implements RestrictionInterface
 
     /**
      * @param $value
-     *
-     * @return bool
      */
     public function isValid($value): bool
     {
-        $len = strlen($value);
+        $len = strlen((string) $value);
 
         return $len >= $this->min && $len <= $this->max;
     }
 
-    /**
-     * @return string
-     */
     public function getRejectionFormat(): string
     {
         return 'The length of "%s" is not between ' . sprintf('%d and %d', $this->min, $this->max);

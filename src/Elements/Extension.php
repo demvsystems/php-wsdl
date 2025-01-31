@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Dgame\Wsdl\Elements;
 
 use DOMElement;
@@ -10,29 +12,15 @@ use DOMElement;
  */
 final class Extension
 {
-    /**
-     * @var string
-     */
     private string $base;
-    /**
-     * @var string
-     */
+
     private string $prefix;
-    /**
-     * @var DOMElement
-     */
-    private DOMElement $element;
 
     /**
      * Extension constructor.
-     *
-     * @param DOMElement $element
-     * @param string     $extension
      */
-    public function __construct(DOMElement $element, string $extension)
+    public function __construct(private readonly DOMElement $domElement, string $extension)
     {
-        $this->element = $element;
-
         if (str_contains($extension, ':')) {
             [$this->prefix, $this->base] = explode(':', $extension);
         } else {
@@ -40,33 +28,21 @@ final class Extension
         }
     }
 
-    /**
-     * @return string
-     */
     public function getPrefixedName(): string
     {
         return sprintf('%s:%s', $this->prefix, $this->base);
     }
 
-    /**
-     * @return DOMElement
-     */
     public function getDomElement(): DOMElement
     {
-        return $this->element;
+        return $this->domElement;
     }
 
-    /**
-     * @return string
-     */
     public function getBase(): string
     {
         return $this->base;
     }
 
-    /**
-     * @return string
-     */
     public function getPrefix(): string
     {
         return $this->prefix;
@@ -79,8 +55,8 @@ final class Extension
     {
         $elements = [];
 
-        $nodes = $this->getDomElement()->getElementsByTagName('element');
-        for ($i = 0, $c = $nodes->length; $i < $c; $i++) {
+        $nodes = $this->domElement->getElementsByTagName('element');
+        for ($i = 0, $c = $nodes->length; $i < $c; ++$i) {
             $node = $nodes->item($i);
 
             $elements[] = new Element($node);

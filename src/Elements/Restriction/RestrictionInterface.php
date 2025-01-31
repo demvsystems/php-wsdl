@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Dgame\Wsdl\Elements\Restriction;
 
 /**
@@ -10,13 +12,8 @@ interface RestrictionInterface
 {
     /**
      * @param $value
-     *
-     * @return bool
      */
     public function isValid($value): bool;
 
-    /**
-     * @return string
-     */
     public function getRejectionFormat(): string;
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Dgame\Wsdl;
 
 use Dgame\Wsdl\Elements\ComplexType;
@@ -10,7 +12,6 @@ use DOMDocument;
 use DOMElement;
 use DOMNodeList;
 use DOMXPath;
-use Enrise\Uri;
 use function Dgame\Ensurance\enforce;
 use function Dgame\Ensurance\ensure;
 
@@ -21,63 +22,46 @@ use function Dgame\Ensurance\ensure;
 final class Xsd implements XsdAdapterInterface
 {
     private const W3_SCHEMA       = 'http://www.w3.org/2001/XMLSchema';
+
     private const SCHEMA_LOCATION = 'schemaLocation';
 
-    /**
-     * @var DOMElement
-     */
-    private DOMElement $element;
-    /**
-     * @var DOMXPath
-     */
-    private $xpath;
-    /**
-     * @var array
-     */
-    private $imports = [];
-    /**
-     * @var string
-     */
-    private $location;
-    /**
-     * @var string
-     */
-    private $namespace;
+    private readonly DOMElement $domElement;
+
+    private ?\DOMXPath $domxPath = null;
+
+    private array $imports = [];
+
+    private readonly string $namespace;
+
     /**
      * @var self[]
      */
-    private $schemas = [];
+    private array $schemas = [];
 
     /**
      * Xsd constructor.
-     *
-     * @param DOMElement  $element
-     * @param string|null $location
      */
-    public function __construct(DOMElement $element, string $location = null)
+    public function __construct(DOMElement $domElement, private readonly ?string $location = null)
     {
-        $this->namespace = $element->getAttribute('targetNamespace');
-        $this->location  = $location;
-        $this->element   = $element;
+        $this->namespace = $domElement->getAttribute('targetNamespace');
+        $this->domElement   = $domElement;
 
         $this->resolveIncludes();
     }
 
     /**
-     * @param Wsdl $wsdl
-     *
      * @return self[]
      */
     public static function load(Wsdl $wsdl): array
     {
         enforce($wsdl->isValid())->orThrow('Invalid WSDL "%s" given', $wsdl->getLocation());
 
-        $nodes = $wsdl->getDocument()->getElementsByTagNameNS(self::W3_SCHEMA, 'schema');
-        enforce($nodes->length !== 0)->orThrow('There is no Schema');
+        $domNodeList = $wsdl->getDocument()->getElementsByTagNameNS(self::W3_SCHEMA, 'schema');
+        enforce($domNodeList->length !== 0)->orThrow('There is no Schema');
 
         $schemas = [];
-        for ($i = 0, $c = $nodes->length; $i < $c; $i++) {
-            $node     = $nodes->item($i);
+        for ($i = 0, $c = $domNodeList->length; $i < $c; ++$i) {
+            $node     = $domNodeList->item($i);
             $location = self::getSchemaLocation($node);
 
             $schema = new self($node, $wsdl->getLocation());
@@ -91,34 +75,23 @@ final class Xsd implements XsdAdapterInterface
         return $schemas;
     }
 
-    /**
-     * @param DOMElement $element
-     *
-     * @return null|string
-     */
-    private static function getSchemaLocation(DOMElement $element): ?string
+    private static function getSchemaLocation(DOMElement $domElement): ?string
     {
-        $includes = $element->getElementsByTagNameNS(self::W3_SCHEMA, 'include');
-        $location = self::findSchemaLocationIn($includes);
-        if (!empty($location)) {
+        $domNodeList = $domElement->getElementsByTagNameNS(self::W3_SCHEMA, 'include');
+        $location = self::findSchemaLocationIn($domNodeList);
+        if ($location !== null && $location !== '' && $location !== '0') {
             return $location;
         }
 
-        $imports  = $element->getElementsByTagNameNS(self::W3_SCHEMA, 'import');
-        $location = self::findSchemaLocationIn($imports);
+        $imports  = $domElement->getElementsByTagNameNS(self::W3_SCHEMA, 'import');
 
-        return $location;
+        return self::findSchemaLocationIn($imports);
     }
 
-    /**
-     * @param DOMNodeList $nodes
-     *
-     * @return null|string
-     */
-    private static function findSchemaLocationIn(DOMNodeList $nodes): ?string
+    private static function findSchemaLocationIn(DOMNodeList $domNodeList): ?string
     {
-        for ($i = 0, $c = $nodes->length; $i < $c; $i++) {
-            $node = $nodes->item($i);
+        for ($i = 0, $c = $domNodeList->length; $i < $c; ++$i) {
+            $node = $domNodeList->item($i);
             if ($node->hasAttribute(self::SCHEMA_LOCATION)) {
                 return $node->getAttribute(self::SCHEMA_LOCATION);
             }
@@ -132,74 +105,56 @@ final class Xsd implements XsdAdapterInterface
      */
     private function resolveIncludes(): void
     {
-        $nodes = $this->element->getElementsByTagNameNS(self::W3_SCHEMA, 'include');
-        for ($i = 0, $c = $nodes->length; $i < $c; $i++) {
+        $nodes = $this->domElement->getElementsByTagNameNS(self::W3_SCHEMA, 'include');
+        for ($i = 0, $c = $nodes->length; $i < $c; ++$i) {
             $include = $nodes->item($i);
 
             $location = $include->getAttribute('schemaLocation');
 
             $xsd = $this->loadXsdByUri($location);
             foreach ($xsd->getChildNodes() as $child) {
-                $node = $this->getDocument()->importNode($child, true);
+                $node = $this->domElement->ownerDocument->importNode($child, true);
                 $include->parentNode->appendChild($node);
             }
         }
 
-        foreach ($nodes as $include) {
-            $include->parentNode->removeChild($include);
+        foreach ($nodes as $node) {
+            $node->parentNode->removeChild($node);
         }
     }
 
-    /**
-     * @return DOMDocument
-     */
     public function getDocument(): DOMDocument
     {
-        return $this->element->ownerDocument;
+        return $this->domElement->ownerDocument;
     }
 
-    /**
-     * @return bool
-     */
     public function hasLocation(): bool
     {
-        return !empty($this->location);
+        return $this->location !== null && $this->location !== '' && $this->location !== '0';
     }
 
-    /**
-     * @return string
-     */
     public function getLocation(): string
     {
         return $this->location ?? '';
     }
 
-    /**
-     * @return string
-     */
     public function getNamespace(): string
     {
         return $this->namespace;
     }
 
-    /**
-     * @return DOMXPath
-     */
     public function getXPath(): DOMXPath
     {
-        if ($this->xpath === null) {
-            $this->xpath = new DOMXPath($this->element->ownerDocument);
+        if ($this->domxPath === null) {
+            $this->domxPath = new DOMXPath($this->domElement->ownerDocument);
         }
 
-        return $this->xpath;
+        return $this->domxPath;
     }
 
-    /**
-     * @return DOMNodeList
-     */
     public function getChildNodes(): DOMNodeList
     {
-        return $this->element->childNodes;
+        return $this->domElement->childNodes;
     }
 
     /**
@@ -207,8 +162,8 @@ final class Xsd implements XsdAdapterInterface
      */
     private function loadImports(): void
     {
-        $nodes = $this->element->getElementsByTagName('import');
-        for ($i = 0, $c = $nodes->length; $i < $c; $i++) {
+        $nodes = $this->domElement->getElementsByTagName('import');
+        for ($i = 0, $c = $nodes->length; $i < $c; ++$i) {
             $node = $nodes->item($i);
             $uri  = $node->getAttribute('namespace');
             if ($node->hasAttribute('schemaLocation')) {
@@ -217,33 +172,20 @@ final class Xsd implements XsdAdapterInterface
         }
     }
 
-    /**
-     * @return array
-     */
     public function getImports(): array
     {
-        if (empty($this->imports)) {
+        if ($this->imports === []) {
             $this->loadImports();
         }
 
         return $this->imports;
     }
 
-    /**
-     * @param string $uri
-     *
-     * @return bool
-     */
     public function hasImportLocation(string $uri): bool
     {
         return array_key_exists($uri, $this->getImports());
     }
 
-    /**
-     * @param string $uri
-     *
-     * @return string
-     */
     public function getLocalImportLocationByUri(string $uri): string
     {
         enforce($this->hasImportLocation($uri))->orThrow('No Import found with URI %s', $uri);
@@ -251,58 +193,34 @@ final class Xsd implements XsdAdapterInterface
         return $this->imports[$uri];
     }
 
-    /**
-     * @param string $uri
-     *
-     * @return string
-     */
     public function getImportLocationByUri(string $uri): string
     {
         return $this->getLocalImportLocationByUri($uri);
     }
 
-    /**
-     * @param string $prefix
-     * @param string $namespace
-     *
-     * @return bool
-     */
     public function hasUriWithPrefix(string $prefix, string $namespace = 'xmlns'): bool
     {
         $attr = sprintf('%s:%s', $namespace, $prefix);
 
-        return $this->element->hasAttribute($attr);
+        return $this->domElement->hasAttribute($attr);
     }
 
-    /**
-     * @param string $prefix
-     * @param string $namespace
-     *
-     * @return string
-     */
     public function getUriByPrefix(string $prefix, string $namespace = 'xmlns'): string
     {
         $attr = sprintf('%s:%s', $namespace, $prefix);
 
-        return $this->element->hasAttribute($attr) ? $this->element->getAttribute($attr) : '';
+        return $this->domElement->hasAttribute($attr) ? $this->domElement->getAttribute($attr) : '';
     }
 
-    /**
-     * @param string $uri
-     *
-     * @return Xsd
-     */
     public function loadXsdByUri(string $uri): self
     {
         $xsd = $this->tryLoadXsdByUri($uri);
-        enforce($xsd !== null)->orThrow('Could not load XSD by Uri %s', $uri);
+        enforce($xsd instanceof \Dgame\Wsdl\Xsd)->orThrow('Could not load XSD by Uri %s', $uri);
 
         return $xsd;
     }
 
     /**
-     * @param string $location
-     *
      * @return Xsd|null
      */
     public function tryLoadXsdByUri(string $location): ?self
@@ -313,7 +231,7 @@ final class Xsd implements XsdAdapterInterface
 
         foreach ($this->getPossibleLocations($location) as $location) {
             $document = HttpClient::instance()->loadDocument($location);
-            if ($document !== null) {
+            if ($document instanceof \DOMDocument) {
                 return new self($document->documentElement, $location);
             }
         }
@@ -322,8 +240,6 @@ final class Xsd implements XsdAdapterInterface
     }
 
     /**
-     * @param string $location
-     *
      * @return string[]
      */
     private function getPossibleLocations(string $location): array
@@ -335,8 +251,8 @@ final class Xsd implements XsdAdapterInterface
         $location     = ltrim($location, '/');
         $baseLocation = sprintf(
             '%s://%s/%s',
-            parse_url($this->location, PHP_URL_SCHEME),
-            parse_url($this->location, PHP_URL_HOST),
+            parse_url((string) $this->location, PHP_URL_SCHEME),
+            parse_url((string) $this->location, PHP_URL_HOST),
             $location
         );
 
@@ -345,15 +261,12 @@ final class Xsd implements XsdAdapterInterface
         }
 
         return [
-            sprintf('%s/%s', pathinfo($this->location, PATHINFO_DIRNAME), $location),
+            sprintf('%s/%s', pathinfo((string) $this->location, PATHINFO_DIRNAME), $location),
             $baseLocation
         ];
     }
 
     /**
-     * @param string $prefix
-     *
-     * @return Xsd
      * @throws \Throwable
      */
     public function loadXsdByPrefix(string $prefix): self
@@ -363,7 +276,7 @@ final class Xsd implements XsdAdapterInterface
 
         if (!array_key_exists($uri, $this->schemas)) {
             $xsd = $this->tryLoadXsdByUri($uri);
-            if ($xsd !== null) {
+            if ($xsd instanceof \Dgame\Wsdl\Xsd) {
                 $this->schemas[$uri] = $xsd;
             }
         }
@@ -384,7 +297,7 @@ final class Xsd implements XsdAdapterInterface
             }
 
             $xsd = $this->tryLoadXsdByUri($location);
-            if ($xsd !== null) {
+            if ($xsd instanceof \Dgame\Wsdl\Xsd) {
                 $this->schemas[$uri] = $xsd;
             }
         }
@@ -393,20 +306,18 @@ final class Xsd implements XsdAdapterInterface
     }
 
     /**
-     * @param string $name
-     *
      * @return Element[]
      */
     public function getAllElementsByName(string $name): array
     {
         $elements = [];
 
-        if (!$this->element->hasAttributeNS('http://www.w3.org/2001/XMLSchema', 'xsd')) {
+        if (!$this->domElement->hasAttributeNS('http://www.w3.org/2001/XMLSchema', 'xsd')) {
             $this->getXPath()->registerNamespace('xsd', 'http://www.w3.org/2001/XMLSchema');
         }
 
         $nodes = $this->getXPath()->query(sprintf('//xsd:element[@name="%s"]', $name));
-        for ($i = 0, $c = $nodes->length; $i < $c; $i++) {
+        for ($i = 0, $c = $nodes->length; $i < $c; ++$i) {
             $node = $nodes->item($i);
             $name = $node->getAttribute('name');
 
@@ -414,7 +325,7 @@ final class Xsd implements XsdAdapterInterface
         }
 
         $nodes = $this->getXPath()->query(sprintf('//xsd:simpleType[@name="%s"]', $name));
-        for ($i = 0, $c = $nodes->length; $i < $c; $i++) {
+        for ($i = 0, $c = $nodes->length; $i < $c; ++$i) {
             $node = $nodes->item($i);
             $name = $node->getAttribute('name');
 
@@ -422,7 +333,7 @@ final class Xsd implements XsdAdapterInterface
         }
 
         $nodes = $this->getXPath()->query(sprintf('//xsd:complexType[@name="%s"]', $name));
-        for ($i = 0, $c = $nodes->length; $i < $c; $i++) {
+        for ($i = 0, $c = $nodes->length; $i < $c; ++$i) {
             $node = $nodes->item($i);
             $name = $node->getAttribute('name');
 
@@ -432,33 +343,23 @@ final class Xsd implements XsdAdapterInterface
         return $elements;
     }
 
-    /**
-     * @param string $name
-     *
-     * @return Element|null
-     */
     public function getOneElementByName(string $name): ?Element
     {
         $elements = $this->getAllElementsByName($name);
 
-        return empty($elements) ? null : reset($elements);
+        return $elements === [] ? null : reset($elements);
     }
 
-    /**
-     * @param string $name
-     *
-     * @return Element|null
-     */
     public function findElementByNameInDeep(string $name): ?Element
     {
-        if (strpos($name, ':') === false) {
+        if (!str_contains($name, ':')) {
             return $this->getOneElementByName($name);
         }
 
         [$prefix, $name] = explode(':', $name);
 
         $element = $this->getOneElementByName($name);
-        if ($element !== null) {
+        if ($element instanceof \Dgame\Wsdl\Elements\Element) {
             return $element;
         }
 
@@ -471,4 +372,3 @@ final class Xsd implements XsdAdapterInterface
         return $xsd->getOneElementByName($name);
     }
 }
-

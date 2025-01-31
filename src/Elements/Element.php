@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Dgame\Wsdl\Elements;
 
 use DOMElement;
@@ -12,74 +14,48 @@ use function Dgame\Ensurance\enforce;
 class Element
 {
     /**
-     * @var DOMElement
-     */
-    private DOMElement $element;
-
-    /**
      * Element constructor.
-     *
-     * @param DOMElement $element
      */
-    public function __construct(DOMElement $element)
+    public function __construct(private readonly DOMElement $domElement)
     {
-        $this->element = $element;
     }
 
     /**
-     * @param SimpleType|null $simple
-     *
-     * @return bool
+     * @param SimpleType|null $simpleType
      */
-    public function isSimpleType(SimpleType &$simple = null): bool
+    public function isSimpleType(SimpleType &$simpleType = null): bool
     {
-        $simple = null;
+        $simpleType = null;
 
         return false;
     }
 
     /**
-     * @param ComplexType|null $complex
-     *
-     * @return bool
+     * @param ComplexType|null $complexType
      */
-    public function isComplexType(ComplexType &$complex = null): bool
+    public function isComplexType(ComplexType &$complexType = null): bool
     {
-        $complex = null;
+        $complexType = null;
 
         return false;
     }
 
-    /**
-     * @param string $name
-     *
-     * @return bool
-     */
     final public function hasAttribute(string $name): bool
     {
-        return $this->element->hasAttribute($name);
+        return $this->domElement->hasAttribute($name);
     }
 
-    /**
-     * @param string $name
-     *
-     * @return string
-     */
     final public function getAttribute(string $name): string
     {
-        return $this->element->getAttribute($name);
+        return $this->domElement->getAttribute($name);
     }
 
-    /**
-     * @return DOMElement
-     */
     final public function getDomElement(): DOMElement
     {
-        return $this->element;
+        return $this->domElement;
     }
 
     /**
-     * @return SimpleType
      * @throws \Throwable
      */
     final public function getSimpleType(): SimpleType
@@ -88,15 +64,14 @@ class Element
             return $simple;
         }
 
-        $nodes = $this->getDomElement()->getElementsByTagName('simpleType');
-        enforce($nodes->length !== 0)->orThrow('There are no nodes with name Simple-Types');
-        enforce($nodes->length === 1)->orThrow('There are multiple nodes with name Simple-Types');
+        $domNodeList = $this->getDomElement()->getElementsByTagName('simpleType');
+        enforce($domNodeList->length !== 0)->orThrow('There are no nodes with name Simple-Types');
+        enforce($domNodeList->length === 1)->orThrow('There are multiple nodes with name Simple-Types');
 
-        return new SimpleType($nodes->item(0));
+        return new SimpleType($domNodeList->item(0));
     }
 
     /**
-     * @return ComplexType
      * @throws \Throwable
      */
     final public function getComplexType(): ComplexType
@@ -105,10 +80,10 @@ class Element
             return $complex;
         }
 
-        $nodes = $this->getDomElement()->getElementsByTagName('complexType');
-        enforce($nodes->length !== 0)->orThrow('There are no nodes with name Complex-Types');
-        enforce($nodes->length === 1)->orThrow('There are multiple nodes with name Complex-Types');
+        $domNodeList = $this->getDomElement()->getElementsByTagName('complexType');
+        enforce($domNodeList->length !== 0)->orThrow('There are no nodes with name Complex-Types');
+        enforce($domNodeList->length === 1)->orThrow('There are multiple nodes with name Complex-Types');
 
-        return new ComplexType($nodes->item(0));
+        return new ComplexType($domNodeList->item(0));
     }
 }

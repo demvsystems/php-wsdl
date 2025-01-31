@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Dgame\Wsdl;
 
 use Dgame\Wsdl\Elements\Restriction\RestrictionInterface;
@@ -10,86 +12,45 @@ use Dgame\Wsdl\Elements\Restriction\RestrictionInterface;
  */
 class SoapElement
 {
-    /**
-     * @var string
-     */
-    private string $name;
-
-    /**
-     * @var string
-     */
     private string $uri;
 
-    /**
-     * @var int
-     */
-    private int $min;
-
-    /**
-     * @var int
-     */
-    private int $max;
-
-    /**
-     * @var RestrictionInterface[]
-     */
-    private array $restrictions;
+    private readonly int $max;
 
     /**
      * Input constructor.
      *
-     * @param string                 $name
-     * @param int                    $min
-     * @param int                    $max
      * @param RestrictionInterface[] $restrictions
      */
-    public function __construct(string $name, int $min, int $max, array $restrictions)
+    public function __construct(private readonly string $name, private readonly int $min, int $max, private readonly array $restrictions)
     {
-        $this->name         = $name;
-        $this->min          = $min;
-        $this->max          = $min;
-        $this->restrictions = $restrictions;
+        $this->max          = $this->min;
     }
 
     /**
-     * @param SoapNode|null $node
-     *
-     * @return bool
+     * @param SoapNode|null $soapNode
      */
-    public function isSoapNode(SoapNode &$node = null): bool
+    public function isSoapNode(SoapNode &$soapNode = null): bool
     {
-        $node = null;
+        $soapNode = null;
 
         return false;
     }
 
-    /**
-     * @return string
-     */
     final public function getName(): string
     {
         return $this->name;
     }
 
-    /**
-     * @return string
-     */
     final public function getUri(): string
     {
         return $this->uri ?? '';
     }
 
-    /**
-     * @return int
-     */
     final public function getMin(): int
     {
         return $this->min;
     }
 
-    /**
-     * @return int
-     */
     final public function getMax(): int
     {
         return $this->max;
@@ -103,25 +64,16 @@ class SoapElement
         return $this->restrictions;
     }
 
-    /**
-     * @return bool
-     */
     final public function isRequired(): bool
     {
         return !$this->isVoluntary();
     }
 
-    /**
-     * @return bool
-     */
     final public function isVoluntary(): bool
     {
         return $this->min === 0;
     }
 
-    /**
-     * @param string $uri
-     */
     final public function setUri(string $uri): void
     {
         $this->uri = $uri;

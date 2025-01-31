@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Dgame\Wsdl;
 
 use Dgame\Wsdl\Elements\Element;
@@ -10,17 +12,7 @@ use Dgame\Wsdl\Elements\Element;
  */
 interface XsdAdapterInterface
 {
-    /**
-     * @param string $name
-     *
-     * @return Element|null
-     */
     public function findElementByNameInDeep(string $name): ?Element;
 
-    /**
-     * @param string $prefix
-     *
-     * @return string
-     */
     public function getUriByPrefix(string $prefix): string;
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Dgame\Wsdl\Elements;
 
 use Dgame\Wsdl\Elements\Restriction\RestrictionFactory;
@@ -12,27 +14,20 @@ use DOMElement;
  */
 class SimpleType extends Element
 {
-    /**
-     * @var string
-     */
-    private string $name;
+    private readonly string $name;
 
     /**
      * SimpleType constructor.
-     *
-     * @param DOMElement $element
      */
-    public function __construct(DOMElement $element)
+    public function __construct(DOMElement $domElement)
     {
-        parent::__construct($element);
+        parent::__construct($domElement);
 
-        $this->name = $element->getAttribute('name');
+        $this->name = $domElement->getAttribute('name');
     }
 
     /**
      * @param SimpleType|null $simple
-     *
-     * @return bool
      */
     public function isSimpleType(self &$simple = null): bool
     {
@@ -41,9 +36,6 @@ class SimpleType extends Element
         return true;
     }
 
-    /**
-     * @return string
-     */
     final public function getName(): string
     {
         return $this->name;
@@ -54,11 +46,11 @@ class SimpleType extends Element
      */
     final public function getRestrictions(): array
     {
-        $nodes = $this->getDomElement()->getElementsByTagName('restriction');
+        $domNodeList = $this->getDomElement()->getElementsByTagName('restriction');
 
         $restrictions = [];
-        for ($i = 0, $c = $nodes->length; $i < $c; $i++) {
-            $restrictions[] = RestrictionFactory::createFrom($nodes->item($i));
+        for ($i = 0, $c = $domNodeList->length; $i < $c; ++$i) {
+            $restrictions[] = RestrictionFactory::createFrom($domNodeList->item($i));
         }
 
         return $restrictions;

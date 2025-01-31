@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Dgame\Wsdl;
 
 use Dgame\Soap\Components\Body;
@@ -12,80 +14,51 @@ use Dgame\Soap\Components\Header;
  */
 class SoapRequest
 {
-    /**
-     * @var string
-     */
-    private string $operation;
-    /**
-     * @var string
-     */
-    private string $action;
-    /**
-     * @var Body|null
-     */
-    private ?Body $body;
-    /**
-     * @var Header|null
-     */
-    private ?Header $header;
+    private readonly string $action;
+
+    private ?Body $body = null;
+
+    private ?Header $header = null;
 
     /**
      * SoapRequest constructor.
      *
-     * @param Wsdl   $wsdl
-     * @param string $operation
      *
      * @throws \Throwable
      */
-    public function __construct(Wsdl $wsdl, string $operation)
+    public function __construct(Wsdl $wsdl, private readonly string $operation)
     {
-        $this->operation = $operation;
-        $this->action    = $wsdl->getSoapActionOfOperation($operation);
+        $this->action    = $wsdl->getSoapActionOfOperation($this->operation);
     }
 
-    /**
-     * @return string
-     */
     public function getOperation(): string
     {
         return $this->operation;
     }
 
-    /**
-     * @return string
-     */
     public function getSoapAction(): string
     {
         return $this->action;
     }
 
-    /**
-     * @return Body
-     */
     public function getBody(): Body
     {
-        if ($this->body === null) {
+        if (!$this->body instanceof \Dgame\Soap\Components\Body) {
             $this->body = new Body();
         }
 
         return $this->body;
     }
 
-    /**
-     * @return Header
-     */
     public function getHeader(): Header
     {
-        if ($this->header === null) {
+        if (!$this->header instanceof \Dgame\Soap\Components\Header) {
             $this->header = new Header();
         }
 
         return $this->header;
     }
 
-    /**
-     * @return Envelope
-     */
     public function createEnvelope(): Envelope
     {
         $envelope = new Envelope();
