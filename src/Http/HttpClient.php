@@ -17,7 +17,7 @@ final class HttpClient
     /**
      * @var self
      */
-    private static HttpClient $instance;
+    private static ?HttpClient $instance = null;
 
     /**
      * @var Client
