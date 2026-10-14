@@ -29,9 +29,7 @@ final class HttpClient
      */
     private function __construct()
     {
-        $this->client = new Client(['defaults' => [
-            'verify' => false
-        ]]);
+        $this->client = new Client();
     }
 
     /**
