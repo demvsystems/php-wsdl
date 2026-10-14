@@ -11,6 +11,7 @@ use DOMElement;
 use DOMNodeList;
 use DOMXPath;
 use Enrise\Uri;
+use GuzzleHttp\Client;
 use function Dgame\Ensurance\enforce;
 use function Dgame\Ensurance\ensure;
 
@@ -47,18 +48,17 @@ final class Xsd implements XsdAdapterInterface
      * @var self[]
      */
     private $schemas = [];
+    private HttpClient $httpClient;
 
     /**
-     * Xsd constructor.
-     *
-     * @param DOMElement  $element
-     * @param string|null $location
+     * The client loads all includes and imports of this schema, pass one e.g. to enforce timeouts.
      */
-    public function __construct(DOMElement $element, string $location = null)
+    public function __construct(DOMElement $element, string $location = null, ?HttpClient $httpClient = null)
     {
-        $this->namespace = $element->getAttribute('targetNamespace');
-        $this->location  = $location;
-        $this->element   = $element;
+        $this->namespace  = $element->getAttribute('targetNamespace');
+        $this->location   = $location;
+        $this->element    = $element;
+        $this->httpClient = $httpClient ?? new HttpClient(new Client());
 
         $this->resolveIncludes();
     }
@@ -80,7 +80,7 @@ final class Xsd implements XsdAdapterInterface
             $node     = $nodes->item($i);
             $location = self::getSchemaLocation($node);
 
-            $schema = new self($node, $wsdl->getLocation());
+            $schema = new self($node, $wsdl->getLocation(), $wsdl->getHttpClient());
             $schema = $schema->tryLoadXsdByUri($location);
 
             ensure($schema)->isNotNull()->orThrow('Could not load "%s"', $location);
@@ -312,9 +312,9 @@ final class Xsd implements XsdAdapterInterface
         }
 
         foreach ($this->getPossibleLocations($location) as $location) {
-            $document = HttpClient::instance()->loadDocument($location);
+            $document = $this->httpClient->loadDocument($location);
             if ($document !== null) {
-                return new self($document->documentElement, $location);
+                return new self($document->documentElement, $location, $this->httpClient);
             }
         }
 

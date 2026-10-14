@@ -3,57 +3,26 @@
 namespace Dgame\Wsdl\Http;
 
 use DOMDocument;
-use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use Psr\Http\Message\ResponseInterface;
 
-/**
- * Class Client
- * @package Dgame\Wsdl\Http
- */
 final class HttpClient
 {
-    /**
-     * @var self
-     */
-    private static ?HttpClient $instance = null;
-
-    /**
-     * @var Client
-     */
-    private Client $client;
-
-    /**
-     * HttpClient constructor.
-     */
-    private function __construct()
+    public function __construct(private readonly ClientInterface $client)
     {
-        $this->client = new Client();
     }
 
     /**
-     * @return HttpClient
-     */
-    public static function instance(): self
-    {
-        if (self::$instance === null) {
-            self::$instance = new self();
-        }
-
-        return self::$instance;
-    }
-
-    /**
-     * @param string $uri
+     * @internal
      *
-     * @return ResponseInterface
      * @throws GuzzleException
      */
     public function get(string $uri): ResponseInterface
     {
         try {
-            return $this->client->get($uri);
+            return $this->client->request('GET', $uri);
         } catch (RequestException $e) {
             if ($e->hasResponse()) {
                 return $e->getResponse();
@@ -64,9 +33,8 @@ final class HttpClient
     }
 
     /**
-     * @param string $uri
+     * @internal
      *
-     * @return DOMDocument|null
      * @throws GuzzleException
      */
     public function loadDocument(string $uri): ?DOMDocument
