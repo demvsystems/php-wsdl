@@ -6,6 +6,7 @@ use Dgame\Wsdl\Elements\Element;
 use Dgame\Wsdl\Http\HttpClient;
 use DOMDocument;
 use DOMElement;
+use GuzzleHttp\Client;
 use function Dgame\Ensurance\enforce;
 use function Dgame\Ensurance\ensure;
 
@@ -42,16 +43,21 @@ final class Wsdl
      * @var Xsd[]
      */
     private array $schemas = [];
+    private HttpClient $httpClient;
 
     /**
-     * Wsdl constructor.
-     *
-     * @param string $uri
+     * The client loads the WSDL and all its XSD imports, pass one e.g. to enforce timeouts.
      */
-    public function __construct(string $uri)
+    public function __construct(string $uri, ?HttpClient $httpClient = null)
     {
-        $this->location = $uri;
-        $this->document = HttpClient::instance()->loadDocument($uri);
+        $this->location   = $uri;
+        $this->httpClient = $httpClient ?? new HttpClient(new Client());
+        $this->document   = $this->httpClient->loadDocument($uri);
+    }
+
+    public function getHttpClient(): HttpClient
+    {
+        return $this->httpClient;
     }
 
     /**
